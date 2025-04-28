@@ -1,20 +1,30 @@
-import { createClient } from '@/utils/supabase/server';
-import { cookies } from 'next/headers';
+import { getBackendUrl } from '../utils/shared/environment';
 import Link from 'next/link';
 import CreateTodoForm from '@/components/CreateTodoForm';
 
 export default async function TodosPage() {
-  const cookieStore = cookies();
-  const supabase = createClient(cookieStore);
+  // Fetch todos directly from the backend API
+  let todos = [];
+  let error = null;
 
-  // Fetch all todos
-  const { data: todos, error } = await supabase
-    .from('todos')
-    .select('*')
-    .order('created_at', { ascending: false });
+  try {
+    const backendUrl = getBackendUrl(true);
+    const response = await fetch(`${backendUrl}/api/todos`, {
+      headers: {
+        'Accept': 'application/json',
+        'Cache-Control': 'no-cache'
+      },
+      next: { revalidate: 0 } // Disable cache
+    });
 
-  if (error) {
-    console.error('Error fetching todos:', error);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch todos: ${response.status} ${response.statusText}`);
+    }
+
+    todos = await response.json();
+  } catch (err) {
+    console.error('Error fetching todos:', err);
+    error = err.message;
   }
 
   return (
@@ -37,7 +47,7 @@ export default async function TodosPage() {
             
             {error && (
               <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4">
-                <p>Error loading todos: {error.message}</p>
+                <p>Error loading todos: {error}</p>
               </div>
             )}
             
@@ -45,16 +55,16 @@ export default async function TodosPage() {
               <ul className="space-y-3">
                 {todos.map((todo) => (
                   <li 
-                    key={todo.id} 
+                    key={todo._id || todo.id} 
                     className={`p-3 rounded-md border ${
-                      todo.is_complete 
+                      todo.completed || todo.is_complete
                         ? 'bg-green-50 border-green-200' 
                         : 'bg-gray-50 border-gray-200'
                     }`}
                   >
                     <div className="flex items-start justify-between">
                       <div>
-                        <h3 className={`font-medium ${todo.is_complete ? 'line-through text-gray-500' : ''}`}>
+                        <h3 className={`font-medium ${(todo.completed || todo.is_complete) ? 'line-through text-gray-500' : ''}`}>
                           {todo.title}
                         </h3>
                         {todo.description && (
@@ -62,11 +72,11 @@ export default async function TodosPage() {
                         )}
                       </div>
                       <span className={`text-xs px-2 py-1 rounded-full ${
-                        todo.is_complete 
+                        (todo.completed || todo.is_complete)
                           ? 'bg-green-100 text-green-800' 
                           : 'bg-blue-100 text-blue-800'
                       }`}>
-                        {todo.is_complete ? 'Completed' : 'Active'}
+                        {(todo.completed || todo.is_complete) ? 'Completed' : 'Active'}
                       </span>
                     </div>
                   </li>

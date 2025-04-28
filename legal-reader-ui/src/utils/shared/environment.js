@@ -8,9 +8,17 @@
  */
 export function getBackendUrl(isNextJs = false) {
   if (isNextJs) {
-    return process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8001";
+    const url = process.env.NEXT_PUBLIC_BACKEND_URL;
+    if (!url && process.env.NODE_ENV === 'production') {
+      console.warn('NEXT_PUBLIC_BACKEND_URL is not defined in production environment');
+    }
+    return url || "http://localhost:8001";
   } else {
-    return import.meta.env.VITE_BACKEND_URL || "http://localhost:8001";
+    const url = import.meta.env?.VITE_BACKEND_URL;
+    if (!url && import.meta.env?.PROD) {
+      console.warn('VITE_BACKEND_URL is not defined in production environment');
+    }
+    return url || "http://localhost:8001";
   }
 }
 
@@ -19,5 +27,21 @@ export function getBackendUrl(isNextJs = false) {
  * @returns {string} - The MongoDB URI
  */
 export function getMongoDBUri() {
-  return import.meta.env.VITE_MONGODB_URI || "mongodb://localhost:27017/kanoonsathi";
+  const uri = import.meta.env?.VITE_MONGODB_URI;
+  if (!uri && import.meta.env?.PROD) {
+    console.warn('VITE_MONGODB_URI is not defined in production environment');
+  }
+  return uri || "mongodb://localhost:27017/kanoonsathi";
+}
+
+/**
+ * Gets the application URL with appropriate fallback
+ * @returns {string} - The application URL
+ */
+export function getAppUrl() {
+  const url = import.meta.env?.VITE_APP_URL;
+  if (!url && import.meta.env?.PROD) {
+    console.warn('VITE_APP_URL is not defined in production environment');
+  }
+  return url || "http://localhost:5173";
 }

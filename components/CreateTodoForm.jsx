@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { createClient } from '../utils/supabase/browser';
 import { useRouter } from 'next/navigation';
+import { getBackendUrl } from '../utils/shared/environment';
 
 export default function CreateTodoForm() {
   const [title, setTitle] = useState('');
@@ -17,19 +17,25 @@ export default function CreateTodoForm() {
 
     try {
       setIsSubmitting(true);
-      const supabase = createClient();
+      const backendUrl = getBackendUrl(true);
       
-      const { error } = await supabase
-        .from('todos')
-        .insert([
-          { 
-            title, 
-            description, 
-            is_complete: isComplete 
-          }
-        ]);
+      const response = await fetch(`${backendUrl}/api/todos`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ 
+          title, 
+          description, 
+          completed: isComplete // Match the field name expected by the backend
+        }),
+      });
       
-      if (error) throw error;
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || `Failed to create todo: ${response.status} ${response.statusText}`);
+      }
       
       // Reset form
       setTitle('');
@@ -41,7 +47,7 @@ export default function CreateTodoForm() {
       
     } catch (error) {
       console.error('Error creating todo:', error);
-      alert('Failed to create todo: ' + error.message);
+      alert(`Failed to create todo: ${error.message || 'Unknown error'}`);
     } finally {
       setIsSubmitting(false);
     }

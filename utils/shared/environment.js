@@ -1,4 +1,4 @@
-// This is a shared util function to determine the backend URL based on the environment
+// This is a shared util function for environment variables
 // It can be used in both Next.js and Vite apps
 
 /**
@@ -8,34 +8,58 @@
  */
 export function getBackendUrl(isNextJs = false) {
   if (isNextJs) {
-    return process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8001";
+    const url = process.env.NEXT_PUBLIC_BACKEND_URL;
+    if (!url && process.env.NODE_ENV === 'production') {
+      console.warn('NEXT_PUBLIC_BACKEND_URL is not defined in production environment');
+    }
+    return url || "http://localhost:8001";
   } else {
-    return import.meta.env.VITE_BACKEND_URL || "http://localhost:8001";
+    const url = import.meta.env?.VITE_BACKEND_URL;
+    if (!url && import.meta.env?.PROD) {
+      console.warn('VITE_BACKEND_URL is not defined in production environment');
+    }
+    return url || "http://localhost:8001";
   }
 }
 
 /**
- * Gets the Supabase URL with appropriate fallback based on framework
+ * Gets the MongoDB URI with appropriate fallback based on framework
  * @param {boolean} isNextJs - Whether this is running in Next.js environment
- * @returns {string} - The Supabase URL
+ * @returns {string} - The MongoDB URI
  */
-export function getSupabaseUrl(isNextJs = false) {
+export function getMongoDBUri(isNextJs = false) {
   if (isNextJs) {
-    return process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const uri = process.env.MONGODB_URI;
+    if (!uri && process.env.NODE_ENV === 'production') {
+      console.warn('MONGODB_URI is not defined in production environment');
+    }
+    return uri || "mongodb://localhost:27017/kanoonsathi";
   } else {
-    return import.meta.env.VITE_SUPABASE_URL;
+    const uri = import.meta.env?.VITE_MONGODB_URI;
+    if (!uri && import.meta.env?.PROD) {
+      console.warn('VITE_MONGODB_URI is not defined in production environment');
+    }
+    return uri || "mongodb://localhost:27017/kanoonsathi";
   }
 }
 
 /**
- * Gets the Supabase anon key with appropriate fallback based on framework
+ * Gets the application URL with appropriate fallback based on framework
  * @param {boolean} isNextJs - Whether this is running in Next.js environment
- * @returns {string} - The Supabase anon key
+ * @returns {string} - The application URL
  */
-export function getSupabaseAnonKey(isNextJs = false) {
+export function getAppUrl(isNextJs = false) {
   if (isNextJs) {
-    return process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    const url = process.env.NEXT_PUBLIC_APP_URL;
+    if (!url && process.env.NODE_ENV === 'production') {
+      console.warn('NEXT_PUBLIC_APP_URL is not defined in production environment');
+    }
+    return url || "http://localhost:3000";
   } else {
-    return import.meta.env.VITE_SUPABASE_ANON_KEY;
+    const url = import.meta.env?.VITE_APP_URL;
+    if (!url && import.meta.env?.PROD) {
+      console.warn('VITE_APP_URL is not defined in production environment');
+    }
+    return url || "http://localhost:5173";
   }
 }

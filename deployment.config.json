@@ -1,0 +1,33 @@
+{
+  "environments": {
+    "development": {
+      "appUrl": "http://localhost:3000",
+      "backendUrl": "http://localhost:8001",
+      "mongoUri": "mongodb://localhost:27017/kanoonsathi"
+    },
+    "production": {
+      "appUrl": "${NEXT_PUBLIC_APP_URL}",
+      "backendUrl": "${NEXT_PUBLIC_BACKEND_URL}",
+      "mongoUri": "${MONGODB_URI}"
+    },
+    "staging": {
+      "appUrl": "${NEXT_PUBLIC_APP_URL}",
+      "backendUrl": "${NEXT_PUBLIC_BACKEND_URL}",
+      "mongoUri": "${MONGODB_URI}"
+    }
+  },
+  "deployment": {
+    "nextjs": {
+      "buildCommand": "npm run build",
+      "startCommand": "npm start"
+    },
+    "vite": {
+      "buildCommand": "npm run build",
+      "startCommand": "npm run preview"
+    },
+    "backend": {
+      "startCommand": "python server.py",
+      "requiredDirs": ["temp", "uploads", "translation_cache"]
+    }
+  }
+}

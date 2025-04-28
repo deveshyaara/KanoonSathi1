@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { createClient } from '../utils/supabase/browser';
+import { getBackendUrl } from '../utils/shared/environment';
 
-const SupabaseDemo = () => {
+const TodosDemo = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [data, setData] = useState(null);
@@ -12,20 +12,26 @@ const SupabaseDemo = () => {
         setIsLoading(true);
         setError(null);
 
-        // Get Supabase client
-        const supabase = createClient();
+        // Get backend URL
+        const backendUrl = getBackendUrl(true);
         
-        // Test the Supabase connection
-        const { data: testData, error } = await supabase.from('todos').select('*').limit(5);
+        // Fetch todos from the API
+        const response = await fetch(`${backendUrl}/api/todos`, {
+          headers: {
+            'Accept': 'application/json',
+            'Cache-Control': 'no-cache'
+          }
+        });
         
-        if (error) {
-          throw error;
+        if (!response.ok) {
+          throw new Error(`Failed to fetch todos: ${response.status} ${response.statusText}`);
         }
 
+        const testData = await response.json();
         setData(testData);
       } catch (err) {
-        console.error('Error fetching data from Supabase:', err);
-        setError(err.message || 'Failed to load data from Supabase');
+        console.error('Error fetching data from API:', err);
+        setError(err.message || 'Failed to load data from API');
       } finally {
         setIsLoading(false);
       }
@@ -36,7 +42,7 @@ const SupabaseDemo = () => {
 
   return (
     <div className="glossy-card p-6 my-6 w-full max-w-lg mx-auto">
-      <h2 className="text-2xl font-semibold mb-4">Supabase Integration Demo</h2>
+      <h2 className="text-2xl font-semibold mb-4">Todo List Demo</h2>
       
       {isLoading && (
         <div className="flex justify-center items-center my-4">
@@ -51,9 +57,9 @@ const SupabaseDemo = () => {
         </div>
       )}
 
-      {data && (
+      {data && data.length > 0 && (
         <div>
-          <p className="mb-3">Successfully connected to Supabase!</p>
+          <p className="mb-3">Successfully retrieved todos!</p>
           <div className="overflow-x-auto">
             <table className="min-w-full bg-white border border-gray-200">
               <thead className="bg-gray-100">
@@ -81,11 +87,11 @@ const SupabaseDemo = () => {
         </div>
       )}
 
-      {!isLoading && !error && !data && (
-        <p className="text-gray-500">No data available in the 'todos' table.</p>
+      {!isLoading && !error && (!data || data.length === 0) && (
+        <p className="text-gray-500">No todos available. Create one to get started!</p>
       )}
     </div>
   );
 };
 
-export default SupabaseDemo;
+export default TodosDemo;
